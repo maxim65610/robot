@@ -1,5 +1,9 @@
 package log;
-
+/**
+ * LogLevel представляет набор предопределенных уровней важности для записей журнала.
+ * Каждый уровень имеет числовое значение,
+ * которое определяет его приоритет.
+ */
 public enum LogLevel
 {
     Trace(0),
@@ -10,7 +14,9 @@ public enum LogLevel
     Fatal(5);
     
     private int m_iLevel;
-    
+    /**
+     * Конструктор LogLevel. Инициализирует уровень с заданным числовым значением.
+     */
     private LogLevel(int iLevel)
     {
         m_iLevel = iLevel;

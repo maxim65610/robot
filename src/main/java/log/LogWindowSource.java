@@ -11,6 +11,11 @@ import java.util.Collections;
  * их лишь накапливает. Надо же, чтобы количество сообщений в логе было ограничено 
  * величиной m_iQueueLength (т.е. реально нужна очередь сообщений 
  * ограниченного размера) 
+
+ * LogWindowSource представляет источник журнала, который хранит записи лога
+ * и уведомляет зарегистрированных слушателей об изменениях.
+ * Класс поддерживает регистрацию слушателей,
+ * добавление новых записей и предоставляет методы для доступа к журналу.
  */
 public class LogWindowSource
 {
@@ -19,14 +24,19 @@ public class LogWindowSource
     private ArrayList<LogEntry> m_messages;
     private final ArrayList<LogChangeListener> m_listeners;
     private volatile LogChangeListener[] m_activeListeners;
-    
+    /**
+     * Конструктор LogWindowSource.
+     * Инициализирует источник журнала с заданной максимальной длиной очереди.
+     */
     public LogWindowSource(int iQueueLength) 
     {
         m_iQueueLength = iQueueLength;
         m_messages = new ArrayList<LogEntry>(iQueueLength);
         m_listeners = new ArrayList<LogChangeListener>();
     }
-    
+    /**
+     * Регистрирует нового слушателя изменений журнала.
+     */
     public void registerListener(LogChangeListener listener)
     {
         synchronized(m_listeners)
@@ -35,7 +45,9 @@ public class LogWindowSource
             m_activeListeners = null;
         }
     }
-    
+    /**
+     * Отменяет регистрацию указанного слушателя изменений журнала.
+     */
     public void unregisterListener(LogChangeListener listener)
     {
         synchronized(m_listeners)
@@ -44,7 +56,10 @@ public class LogWindowSource
             m_activeListeners = null;
         }
     }
-    
+    /**
+     * Добавляет новую запись в журнал и уведомляет
+     * всех зарегистрированных слушателей об изменении.
+     */
     public void append(LogLevel logLevel, String strMessage)
     {
         LogEntry entry = new LogEntry(logLevel, strMessage);
@@ -66,12 +81,17 @@ public class LogWindowSource
             listener.onLogChanged();
         }
     }
-    
+    /**
+     * Возвращает текущее количество записей в журнале.
+     */
     public int size()
     {
         return m_messages.size();
     }
-
+    /**
+     * Возвращает подмножество записей журнала,
+     * начиная с указанного индекса и ограниченное заданным количеством.
+     */
     public Iterable<LogEntry> range(int startFrom, int count)
     {
         if (startFrom < 0 || startFrom >= m_messages.size())
@@ -81,7 +101,9 @@ public class LogWindowSource
         int indexTo = Math.min(startFrom + count, m_messages.size());
         return m_messages.subList(startFrom, indexTo);
     }
-
+    /**
+     * Возвращает все записи журнала.
+     */
     public Iterable<LogEntry> all()
     {
         return m_messages;

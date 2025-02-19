@@ -17,15 +17,18 @@ import javax.swing.UnsupportedLookAndFeelException;
 import log.Logger;
 
 /**
- * Что требуется сделать:
- * 1. Метод создания меню перегружен функционалом и трудно читается. 
- * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
- *
+ * MainApplicationFrame представляет главное окно приложения, содержащее панель рабочего пространства (JDesktopPane)
+ * для управления внутренними окнами, такими как журнал работы (LogWindow) и игровое поле (GameWindow).
+ * Класс также создает меню для изменения внешнего вида приложения и выполнения тестовых команд.
  */
 public class MainApplicationFrame extends JFrame
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    
+    /**
+     * Конструктор MainApplicationFrame.
+     * Инициализирует главное окно приложения, добавляет внутренние окна (журнал и игровое поле),
+     * устанавливает меню и настраивает параметры закрытия.
+     */
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
@@ -45,10 +48,12 @@ public class MainApplicationFrame extends JFrame
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
 
-        setJMenuBar(generateMenuBar());
+        setJMenuBar(createMenuBar());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
-    
+    /**
+     * Создает и настраивает окно журнала (LogWindow).
+     */
     protected LogWindow createLogWindow()
     {
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
@@ -59,87 +64,81 @@ public class MainApplicationFrame extends JFrame
         Logger.debug("Протокол работает");
         return logWindow;
     }
-    
+    /**
+     * Добавляет внутреннее окно на панель рабочего пространства и делает его видимым.
+     */
     protected void addWindow(JInternalFrame frame)
     {
         desktopPane.add(frame);
         frame.setVisible(true);
     }
-    
-//    protected JMenuBar createMenuBar() {
-//        JMenuBar menuBar = new JMenuBar();
-// 
-//        //Set up the lone menu.
-//        JMenu menu = new JMenu("Document");
-//        menu.setMnemonic(KeyEvent.VK_D);
-//        menuBar.add(menu);
-// 
-//        //Set up the first menu item.
-//        JMenuItem menuItem = new JMenuItem("New");
-//        menuItem.setMnemonic(KeyEvent.VK_N);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_N, ActionEvent.ALT_MASK));
-//        menuItem.setActionCommand("new");
-////        menuItem.addActionListener(this);
-//        menu.add(menuItem);
-// 
-//        //Set up the second menu item.
-//        menuItem = new JMenuItem("Quit");
-//        menuItem.setMnemonic(KeyEvent.VK_Q);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_Q, ActionEvent.ALT_MASK));
-//        menuItem.setActionCommand("quit");
-////        menuItem.addActionListener(this);
-//        menu.add(menuItem);
-// 
-//        return menuBar;
-//    }
-    
-    private JMenuBar generateMenuBar()
-    {
+    /**
+     * Создает и настраивает менюбар с двумя меню: "Режим отображения" и "Тесты".
+     */
+    private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        
-        JMenu lookAndFeelMenu = new JMenu("Режим отображения");
-        lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
-        lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
-                "Управление режимом отображения приложения");
-        
-        {
-            JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
-            systemLookAndFeel.addActionListener((event) -> {
-                setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                this.invalidate();
-            });
-            lookAndFeelMenu.add(systemLookAndFeel);
-        }
-
-        {
-            JMenuItem crossplatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
-            crossplatformLookAndFeel.addActionListener((event) -> {
-                setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-                this.invalidate();
-            });
-            lookAndFeelMenu.add(crossplatformLookAndFeel);
-        }
-
-        JMenu testMenu = new JMenu("Тесты");
-        testMenu.setMnemonic(KeyEvent.VK_T);
-        testMenu.getAccessibleContext().setAccessibleDescription(
-                "Тестовые команды");
-        
-        {
-            JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
-            addLogMessageItem.addActionListener((event) -> {
-                Logger.debug("Новая строка");
-            });
-            testMenu.add(addLogMessageItem);
-        }
-
-        menuBar.add(lookAndFeelMenu);
-        menuBar.add(testMenu);
+        menuBar.add(createLookAndFeelMenu()); // Создание меню "Режим отображения"
+        menuBar.add(createTestMenu());       // Создание меню "Тесты"
         return menuBar;
     }
-    
+    /**
+     * Создает меню "Режим отображения" с пунктами для выбора внешнего вида приложения.
+     */
+    private JMenu createLookAndFeelMenu() {
+        JMenu lookAndFeelMenu = new JMenu("Режим отображения");
+        lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
+        lookAndFeelMenu.getAccessibleContext().setAccessibleDescription("Управление режимом отображения приложения");
+
+        lookAndFeelMenu.add(createSystemLookAndFeelItem());       // Пункт "Системная схема"
+        lookAndFeelMenu.add(createCrossPlatformLookAndFeelItem()); // Пункт "Универсальная схема"
+
+        return lookAndFeelMenu;
+    }
+    /**
+     * Создает пункт меню "Универсальная схема" для выбора универсального внешнего вида.
+     */
+    private JMenuItem createCrossPlatformLookAndFeelItem() {
+        JMenuItem crossPlatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
+        crossPlatformLookAndFeel.addActionListener(event -> {
+            setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            this.invalidate();
+        });
+        return crossPlatformLookAndFeel;
+    }
+    /**
+     * Создает пункт меню "Системная схема" для выбора системного внешнего вида.
+     */
+    private JMenuItem createSystemLookAndFeelItem() {
+        JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
+        systemLookAndFeel.addActionListener(event -> {
+            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            this.invalidate();
+        });
+        return systemLookAndFeel;
+    }
+    /**
+     * Создает меню "Тесты" с пунктами для выполнения тестовых команд.
+     */
+    private JMenu createTestMenu() {
+        JMenu testMenu = new JMenu("Тесты");
+        testMenu.setMnemonic(KeyEvent.VK_T);
+        testMenu.getAccessibleContext().setAccessibleDescription("Тестовые команды");
+
+        testMenu.add(createAddLogMessageItem()); // Пункт "Сообщение в лог"
+
+        return testMenu;
+    }
+    /**
+     * Создает пункт меню "Сообщение в лог" для добавления записи в журнал.
+     */
+    private JMenuItem createAddLogMessageItem() {
+        JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
+        addLogMessageItem.addActionListener(event -> Logger.debug("Новая строка"));
+        return addLogMessageItem;
+    }
+    /**
+     * Устанавливает внешний вид приложения.
+     */
     private void setLookAndFeel(String className)
     {
         try
