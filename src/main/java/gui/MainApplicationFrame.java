@@ -2,17 +2,9 @@ package gui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import log.Logger;
 
@@ -49,7 +41,14 @@ public class MainApplicationFrame extends JFrame
         addWindow(gameWindow);
 
         setJMenuBar(createMenuBar());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                confirmExit();
+            }
+        });
     }
     /**
      * Создает и настраивает окно журнала (LogWindow).
@@ -77,9 +76,23 @@ public class MainApplicationFrame extends JFrame
      */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        menuBar.add(createLookAndFeelMenu()); // Создание меню "Режим отображения"
-        menuBar.add(createTestMenu());       // Создание меню "Тесты"
+        menuBar.add(createLookAndFeelMenu());
+        menuBar.add(createTestMenu());
+        menuBar.add(exitMenu());
         return menuBar;
+    }
+    /**
+     * Создает пункт меню "Выход" с горячей клавишей Alt + X.
+     */
+    private JMenuItem exitMenu(){
+        JMenuItem exitItem = new JMenuItem("Выход", KeyEvent.VK_X);
+        exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ActionEvent.ALT_MASK));
+        exitItem.addActionListener(event -> {
+            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                    new WindowEvent(this, WindowEvent.WINDOW_CLOSING)
+            );
+        });
+        return exitItem;
     }
     /**
      * Создает меню "Режим отображения" с пунктами для выбора внешнего вида приложения.
@@ -89,8 +102,8 @@ public class MainApplicationFrame extends JFrame
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription("Управление режимом отображения приложения");
 
-        lookAndFeelMenu.add(createSystemLookAndFeelItem());       // Пункт "Системная схема"
-        lookAndFeelMenu.add(createCrossPlatformLookAndFeelItem()); // Пункт "Универсальная схема"
+        lookAndFeelMenu.add(createSystemLookAndFeelItem());
+        lookAndFeelMenu.add(createCrossPlatformLookAndFeelItem());
 
         return lookAndFeelMenu;
     }
@@ -124,7 +137,7 @@ public class MainApplicationFrame extends JFrame
         testMenu.setMnemonic(KeyEvent.VK_T);
         testMenu.getAccessibleContext().setAccessibleDescription("Тестовые команды");
 
-        testMenu.add(createAddLogMessageItem()); // Пункт "Сообщение в лог"
+        testMenu.add(createAddLogMessageItem());
 
         return testMenu;
     }
@@ -150,6 +163,26 @@ public class MainApplicationFrame extends JFrame
             | IllegalAccessException | UnsupportedLookAndFeelException e)
         {
             // just ignore
+        }
+    }
+    /**
+     * Отображает диалоговое окно с подтверждением выхода из программы
+     */
+    private void confirmExit() {
+        String[] options = {"Да", "Нет"};
+        int result = JOptionPane.showOptionDialog(
+                this,
+                "Вы действительно хотите выйти?",
+                "Подтверждение выхода",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[1]
+        );
+
+        if (result == JOptionPane.YES_OPTION) {
+            System.exit(0);
         }
     }
 }
