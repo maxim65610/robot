@@ -24,15 +24,15 @@ public class MainApplicationFrame extends JFrame
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
-        int inset = 50;        
+        int inset = 50;
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(inset, inset,
             screenSize.width  - inset*2,
             screenSize.height - inset*2);
 
         setContentPane(desktopPane);
-        
-        
+
+
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
 
@@ -78,13 +78,13 @@ public class MainApplicationFrame extends JFrame
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(createLookAndFeelMenu());
         menuBar.add(createTestMenu());
-        menuBar.add(exitMenu());
+        menuBar.add(createManagementMenu());
         return menuBar;
     }
     /**
      * Создает пункт меню "Выход" с горячей клавишей Alt + X.
      */
-    private JMenuItem exitMenu(){
+    private JMenuItem createExitMenu(){
         JMenuItem exitItem = new JMenuItem("Выход", KeyEvent.VK_X);
         exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ActionEvent.ALT_MASK));
         exitItem.addActionListener(event -> {
@@ -93,6 +93,14 @@ public class MainApplicationFrame extends JFrame
             );
         });
         return exitItem;
+    }
+    /**
+     * Создает меню "Управление" с пунктом для выхода.
+     */
+    private JMenuItem createManagementMenu(){
+        JMenu managementMenu = new JMenu("Управление");
+        managementMenu.add(createExitMenu());
+        return managementMenu;
     }
     /**
      * Создает меню "Режим отображения" с пунктами для выбора внешнего вида приложения.
@@ -182,6 +190,7 @@ public class MainApplicationFrame extends JFrame
         );
 
         if (result == JOptionPane.YES_OPTION) {
+            dispose();
             System.exit(0);
         }
     }
