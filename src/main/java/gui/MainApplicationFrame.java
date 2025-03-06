@@ -1,29 +1,31 @@
 package gui;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.event.*;
-
-import javax.swing.*;
-
 import log.Logger;
 
-/**
- * MainApplicationFrame представляет главное окно приложения, содержащее панель рабочего пространства (JDesktopPane)
- * для управления внутренними окнами, такими как журнал работы (LogWindow) и игровое поле (GameWindow).
- * Класс также создает меню для изменения внешнего вида приложения и выполнения тестовых команд.
- */
-public class MainApplicationFrame extends JFrame
-{
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+
+public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    /**
-     * Конструктор MainApplicationFrame.
-     * Инициализирует главное окно приложения, добавляет внутренние окна (журнал и игровое поле),
-     * устанавливает меню и настраивает параметры закрытия.
-     */
+    private final WindowConfig windowConfig;
+    private final List<WindowState> windowStates = new ArrayList<>();
+
     public MainApplicationFrame() {
-        //Make the big window be indented 50 pixels from each edge
-        //of the screen.
+
+        String homeDir = System.getProperty("user.home");
+        String userDir = homeDir + File.separator + System.getProperty("user.name");
+        new File(userDir).mkdirs(); // Создаем директорию пользователя
+        this.windowConfig = new WindowConfig(userDir, "state.cfg");
+
         int inset = 50;
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(inset, inset,
@@ -32,13 +34,16 @@ public class MainApplicationFrame extends JFrame
 
         setContentPane(desktopPane);
 
-
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
+        windowStates.add(new InternalFrameStateAdapter(logWindow, "log"));
 
         GameWindow gameWindow = new GameWindow();
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
+        windowStates.add(new InternalFrameStateAdapter(gameWindow, "game"));
+
+        restoreStateFromConfig();
 
         setJMenuBar(createMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -121,19 +126,21 @@ public class MainApplicationFrame extends JFrame
     private JMenuItem createCrossPlatformLookAndFeelItem() {
         JMenuItem crossPlatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
         crossPlatformLookAndFeel.addActionListener(event -> {
-            setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            this.invalidate();
+            try {
+                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                SwingUtilities.updateComponentTreeUI(this);
+            } catch (Exception ignored) {}
         });
         return crossPlatformLookAndFeel;
     }
-    /**
-     * Создает пункт меню "Системная схема" для выбора системного внешнего вида.
-     */
+
     private JMenuItem createSystemLookAndFeelItem() {
         JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
         systemLookAndFeel.addActionListener(event -> {
-            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            this.invalidate();
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                SwingUtilities.updateComponentTreeUI(this);
+            } catch (Exception ignored) {}
         });
         return systemLookAndFeel;
     }
@@ -157,25 +164,22 @@ public class MainApplicationFrame extends JFrame
         addLogMessageItem.addActionListener(event -> Logger.debug("Новая строка"));
         return addLogMessageItem;
     }
-    /**
-     * Устанавливает внешний вид приложения.
-     */
-    private void setLookAndFeel(String className)
-    {
-        try
-        {
-            UIManager.setLookAndFeel(className);
-            SwingUtilities.updateComponentTreeUI(this);
+    private void saveStateToConfig() {
+        Map<String, String> state = new HashMap<>();
+        for (WindowState windowState : windowStates) {
+            windowState.saveState(state); // Сохраняем состояние каждого окна
         }
-        catch (ClassNotFoundException | InstantiationException
-            | IllegalAccessException | UnsupportedLookAndFeelException e)
-        {
-            // just ignore
+        windowConfig.saveState(state); // Записываем состояние в файл
+    }
+
+    private void restoreStateFromConfig() {
+        Map<String, String> state = windowConfig.loadState(); // Загружаем состояние из файла
+        for (WindowState windowState : windowStates) {
+            windowState.restoreState(state); // Восстанавливаем состояние каждого окна
         }
     }
-    /**
-     * Отображает диалоговое окно с подтверждением выхода из программы
-     */
+
+
     private void confirmExit() {
         String[] options = {"Да", "Нет"};
         int result = JOptionPane.showOptionDialog(
@@ -187,9 +191,11 @@ public class MainApplicationFrame extends JFrame
                 null,
                 options,
                 options[1]
+
         );
 
         if (result == JOptionPane.YES_OPTION) {
+            saveStateToConfig();
             dispose();
             System.exit(0);
         }
