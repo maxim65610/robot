@@ -8,22 +8,24 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-
+/**
+ * Основной фрейм приложения, который управляет окнами, состоянием и интерфейсом пользователя.
+ */
 public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
     private final WindowConfig windowConfig;
     private final List<WindowState> windowStates = new ArrayList<>();
-
+    /**
+     * Конструктор, инициализирующий основные компоненты фрейма, включая создание внутренних окон и
+     * восстановление их состояния из конфигурационного файла.
+     */
     public MainApplicationFrame() {
 
-        String homeDir = System.getProperty("user.home");
-        String userDir = homeDir + File.separator + System.getProperty("user.name");
-        new File(userDir).mkdirs(); // Создаем директорию пользователя
+        String userDir = System.getProperty("user.home");
         this.windowConfig = new WindowConfig(userDir, "state.cfg");
 
         int inset = 50;
@@ -51,7 +53,7 @@ public class MainApplicationFrame extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                confirmExit();
+                confirmExitAndSaveState();
             }
         });
     }
@@ -133,7 +135,9 @@ public class MainApplicationFrame extends JFrame {
         });
         return crossPlatformLookAndFeel;
     }
-
+    /**
+     * Создает пункт меню для выбора системной схемы внешнего вида.
+     */
     private JMenuItem createSystemLookAndFeelItem() {
         JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
         systemLookAndFeel.addActionListener(event -> {
@@ -164,6 +168,9 @@ public class MainApplicationFrame extends JFrame {
         addLogMessageItem.addActionListener(event -> Logger.debug("Новая строка"));
         return addLogMessageItem;
     }
+    /**
+     * Сохраняет состояние всех окон в конфигурационный файл.
+     */
     private void saveStateToConfig() {
         Map<String, String> state = new HashMap<>();
         for (WindowState windowState : windowStates) {
@@ -171,16 +178,19 @@ public class MainApplicationFrame extends JFrame {
         }
         windowConfig.saveState(state); // Записываем состояние в файл
     }
-
+    /**
+     * Восстанавливает состояние окон из конфигурационного файла.
+     */
     private void restoreStateFromConfig() {
         Map<String, String> state = windowConfig.loadState(); // Загружаем состояние из файла
         for (WindowState windowState : windowStates) {
             windowState.restoreState(state); // Восстанавливаем состояние каждого окна
         }
     }
-
-
-    private void confirmExit() {
+    /**
+     * Подтверждает выход из приложения и сохраняет состояние перед выходом.
+     */
+    private void confirmExitAndSaveState() {
         String[] options = {"Да", "Нет"};
         int result = JOptionPane.showOptionDialog(
                 this,
