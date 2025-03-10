@@ -174,17 +174,17 @@ public class MainApplicationFrame extends JFrame {
     private void saveStateToConfig() {
         Map<String, String> state = new HashMap<>();
         for (WindowState windowState : windowStates) {
-            windowState.saveState(state); // Сохраняем состояние каждого окна
+            windowState.saveState(state);
         }
-        windowConfig.saveState(state); // Записываем состояние в файл
+        windowConfig.saveState(state);
     }
     /**
      * Восстанавливает состояние окон из конфигурационного файла.
      */
     private void restoreStateFromConfig() {
-        Map<String, String> state = windowConfig.loadState(); // Загружаем состояние из файла
+        Map<String, String> state = windowConfig.loadState();
         for (WindowState windowState : windowStates) {
-            windowState.restoreState(state); // Восстанавливаем состояние каждого окна
+            windowState.restoreState(state);
         }
     }
     /**

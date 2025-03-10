@@ -27,7 +27,9 @@ public class WindowConfig {
                     state.put(parts[0].trim(), parts[1].trim());
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return state;
     }
     /**
@@ -39,6 +41,8 @@ public class WindowConfig {
                 writer.write(entry.getKey() + " = " + entry.getValue());
                 writer.newLine();
             }
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

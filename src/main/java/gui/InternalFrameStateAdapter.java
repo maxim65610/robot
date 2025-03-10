@@ -69,7 +69,8 @@ public class InternalFrameStateAdapter implements WindowState {
             } else {
                 frame.setIcon(false);
             }
-        } catch (PropertyVetoException ignored) {
+        } catch (PropertyVetoException e) {
+            e.printStackTrace();
         }
     }
 }
