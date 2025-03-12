@@ -45,6 +45,8 @@ public class MainApplicationFrame extends JFrame {
         addWindow(gameWindow);
         windowStates.add(new InternalFrameStateAdapter(gameWindow, "game"));
 
+        windowStates.add(new MainFrameStateAdapter(this, "main"));
+
         restoreStateFromConfig();
 
         setJMenuBar(createMenuBar());
@@ -183,8 +185,12 @@ public class MainApplicationFrame extends JFrame {
      */
     private void restoreStateFromConfig() {
         Map<String, String> state = windowConfig.loadState();
-        for (WindowState windowState : windowStates) {
-            windowState.restoreState(state);
+        if (state.isEmpty()) {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } else {
+            for (WindowState windowState : windowStates) {
+                windowState.restoreState(state);
+            }
         }
     }
     /**
