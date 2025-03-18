@@ -1,6 +1,8 @@
 package gui;
 
+import controller.GameController;
 import log.Logger;
+import model.RobotModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,6 +26,8 @@ public class MainApplicationFrame extends JFrame {
      * восстановление их состояния из конфигурационного файла.
      */
     public MainApplicationFrame() {
+        RobotModel model = new RobotModel();
+        new GameController(model);
 
         String userDir = System.getProperty("user.home");
         this.windowConfig = new WindowConfig(userDir, "state.cfg");
@@ -40,7 +44,7 @@ public class MainApplicationFrame extends JFrame {
         addWindow(logWindow);
         windowStates.add(new InternalFrameStateAdapter(logWindow, "log"));
 
-        GameWindow gameWindow = new GameWindow();
+        GameWindow gameWindow = new GameWindow(model);
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
         windowStates.add(new InternalFrameStateAdapter(gameWindow, "game"));

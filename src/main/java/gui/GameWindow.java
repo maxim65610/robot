@@ -1,29 +1,21 @@
 package gui;
 
+import model.RobotModel;
+import view.GameVisualizer;
+
 import java.awt.BorderLayout;
 
 import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
 /**
- * GameWindow наследуется от JInternalFrame и предоставляет пользовательский интерфейс
- * для взаимодействия с визуализацией движения робота.
+ * Класс GameWindow представляет внутреннее окно для отображения игрового поля.
  */
-public class GameWindow extends JInternalFrame
-{
-    private final GameVisualizer m_visualizer;
+class GameWindow extends JInternalFrame {
     /**
-     * Конструктор GameWindow.
-     * Инициализирует внутреннее окно с заголовком "Игровое поле",
-     * добавляет компонент GameVisualizer в центральную область панели
-     * и устанавливает минимальный размер окна.
+     * Создает GameWindow с визуализацией модели робота.
      */
-    public GameWindow() 
-    {
+    public GameWindow(RobotModel model) {
         super("Игровое поле", true, true, true, true);
-        m_visualizer = new GameVisualizer();
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(m_visualizer, BorderLayout.CENTER);
-        getContentPane().add(panel);
+        add(new GameVisualizer(model), BorderLayout.CENTER);
         pack();
     }
 }
