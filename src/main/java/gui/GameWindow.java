@@ -13,9 +13,9 @@ class GameWindow extends JInternalFrame {
     /**
      * Создает GameWindow с визуализацией модели робота.
      */
-    public GameWindow(RobotModel model) {
+    public GameWindow(GameVisualizer view) {
         super("Игровое поле", true, true, true, true);
-        add(new GameVisualizer(model), BorderLayout.CENTER);
+        add(view, BorderLayout.CENTER);
         pack();
     }
 }

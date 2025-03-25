@@ -40,11 +40,31 @@ public class RobotModel {
      */
     public void updateModel() {
         double distance = distance(targetX, targetY, x, y);
-        if (distance < 0.5) return;
+        if (distance < 0.5) return; // Остановиться, если робот близко к цели
+
         double velocity = maxVelocity;
         double angleToTarget = angleTo(x, y, targetX, targetY);
-        double angularVelocity = angleToTarget > direction ? maxAngularVelocity : -maxAngularVelocity;
+
+        // Вычисляем разницу между текущим направлением и направлением на цель
+        double angleDifference = asNormalizedRadians(angleToTarget - direction);
+
+        // Определяем направление поворота
+        double angularVelocity;
+        if (angleDifference > Math.PI) {
+            // Если разница больше π, поворачиваем в противоположную сторону
+            angularVelocity = -maxAngularVelocity;
+        } else if (angleDifference < -Math.PI) {
+            // Если разница меньше -π, поворачиваем в противоположную сторону
+            angularVelocity = maxAngularVelocity;
+        } else {
+            // Иначе поворачиваем в сторону цели
+            angularVelocity = (angleDifference > 0) ? maxAngularVelocity : -maxAngularVelocity;
+        }
+
+        // Перемещаем робота
         moveRobot(velocity, angularVelocity, 10);
+
+        // Уведомляем слушателей об изменении позиции
         support.firePropertyChange("position", null, new Point((int) x, (int) y));
     }
     /**
@@ -55,9 +75,37 @@ public class RobotModel {
      * @param duration        Время перемещения.
      */
     private void moveRobot(double velocity, double angularVelocity, double duration) {
-        x += velocity * duration * Math.cos(direction);
-        y += velocity * duration * Math.sin(direction);
-        direction = asNormalizedRadians(direction + angularVelocity * duration);
+        velocity = applyLimits(velocity, 0, maxVelocity);
+        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
+        double newX = x + velocity / angularVelocity *
+                (Math.sin(direction  + angularVelocity * duration) -
+                        Math.sin(direction));
+        if (!Double.isFinite(newX))
+        {
+            newX = x + velocity * duration * Math.cos(direction);
+        }
+        double newY = y - velocity / angularVelocity *
+                (Math.cos(direction  + angularVelocity * duration) -
+                        Math.cos(direction));
+        if (!Double.isFinite(newY))
+        {
+            newY = y + velocity * duration * Math.sin(direction);
+        }
+        x = newX;
+        y = newY;
+        double newDirection = asNormalizedRadians(direction + angularVelocity * duration);
+        direction = newDirection;
+    }
+    /**
+     * Ограничивает значение в заданных пределах.
+     */
+    private static double applyLimits(double value, double min, double max)
+    {
+        if (value < min)
+            return min;
+        if (value > max)
+            return max;
+        return value;
     }
     /**
      * Вычисляет расстояние между двумя точками.

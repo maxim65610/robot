@@ -1,8 +1,10 @@
 package gui;
 
 import controller.GameController;
+import controller.MouseController;
 import log.Logger;
 import model.RobotModel;
+import view.GameVisualizer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,7 +29,9 @@ public class MainApplicationFrame extends JFrame {
      */
     public MainApplicationFrame() {
         RobotModel model = new RobotModel();
+        GameVisualizer view = new GameVisualizer(model);
         new GameController(model);
+        new MouseController(model, view);
 
         String userDir = System.getProperty("user.home");
         this.windowConfig = new WindowConfig(userDir, "state.cfg");
@@ -44,10 +48,14 @@ public class MainApplicationFrame extends JFrame {
         addWindow(logWindow);
         windowStates.add(new InternalFrameStateAdapter(logWindow, "log"));
 
-        GameWindow gameWindow = new GameWindow(model);
+        GameWindow gameWindow = new GameWindow(view);
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
         windowStates.add(new InternalFrameStateAdapter(gameWindow, "game"));
+
+        RobotCoordinatesWindow robotCoordinatesWindow = new RobotCoordinatesWindow(model);
+        addWindow(robotCoordinatesWindow);
+        windowStates.add(new InternalFrameStateAdapter(robotCoordinatesWindow, "coordinate"));
 
         windowStates.add(new MainFrameStateAdapter(this, "main"));
 

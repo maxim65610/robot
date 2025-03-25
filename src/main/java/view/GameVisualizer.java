@@ -22,14 +22,6 @@ public class GameVisualizer extends JPanel implements PropertyChangeListener {
     public GameVisualizer(RobotModel model) {
         this.model = model;
         model.addPropertyChangeListener(this);
-
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                model.setTarget(e.getX(), e.getY());
-            }
-        });
-
         setDoubleBuffered(true);
     }
     /**
