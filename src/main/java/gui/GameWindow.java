@@ -1,6 +1,4 @@
 package gui;
-
-import model.RobotModel;
 import view.GameVisualizer;
 
 import java.awt.BorderLayout;

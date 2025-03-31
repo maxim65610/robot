@@ -21,17 +21,15 @@ public class RobotCoordinatesWindow extends JInternalFrame implements PropertyCh
      * @param model Модель робота.
      */
     public RobotCoordinatesWindow(RobotModel model) {
-        super("Координаты робота", true, true, true, true);// Возможность свернуть окно в иконку
+        super("Координаты робота", true, true, true, true);
         setSize(250,  100);
-        // Панель для отображения координат
         JPanel panel = new JPanel();
         coordinatesLabel = new JLabel();
         panel.add(coordinatesLabel);
         add(panel, BorderLayout.CENTER);
 
-        // Подписка на изменения модели
         model.addPropertyChangeListener(this);
-        updateCoordinates(model.getX(), model.getY()); // Инициализация начальных координат
+        updateCoordinates(model.getX(), model.getY());
     }
 
     /**

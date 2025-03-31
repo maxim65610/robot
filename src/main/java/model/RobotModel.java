@@ -40,31 +40,16 @@ public class RobotModel {
      */
     public void updateModel() {
         double distance = distance(targetX, targetY, x, y);
-        if (distance < 0.5) return; // Остановиться, если робот близко к цели
+        if (distance < 0.5) return;
 
         double velocity = maxVelocity;
         double angleToTarget = angleTo(x, y, targetX, targetY);
 
-        // Вычисляем разницу между текущим направлением и направлением на цель
         double angleDifference = asNormalizedRadians(angleToTarget - direction);
+        double angularVelocity = (angleDifference <= Math.PI) ? maxAngularVelocity : -maxAngularVelocity;
 
-        // Определяем направление поворота
-        double angularVelocity;
-        if (angleDifference > Math.PI) {
-            // Если разница больше π, поворачиваем в противоположную сторону
-            angularVelocity = -maxAngularVelocity;
-        } else if (angleDifference < -Math.PI) {
-            // Если разница меньше -π, поворачиваем в противоположную сторону
-            angularVelocity = maxAngularVelocity;
-        } else {
-            // Иначе поворачиваем в сторону цели
-            angularVelocity = (angleDifference > 0) ? maxAngularVelocity : -maxAngularVelocity;
-        }
-
-        // Перемещаем робота
         moveRobot(velocity, angularVelocity, 10);
 
-        // Уведомляем слушателей об изменении позиции
         support.firePropertyChange("position", null, new Point((int) x, (int) y));
     }
     /**

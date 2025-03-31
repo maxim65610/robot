@@ -3,8 +3,6 @@ package view;
 import model.RobotModel;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import javax.swing.*;
 import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
