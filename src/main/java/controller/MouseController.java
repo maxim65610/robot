@@ -1,5 +1,6 @@
 package controller;
 
+import log.Logger;
 import model.RobotModel;
 import view.GameVisualizer;
 
@@ -17,6 +18,7 @@ public class MouseController {
             @Override
             public void mouseClicked(MouseEvent e) {
                 model.setTarget(e.getX(), e.getY());
+                Logger.debug("Координаты цели изменились");
             }
         });
     }

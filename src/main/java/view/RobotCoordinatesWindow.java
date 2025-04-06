@@ -1,5 +1,6 @@
-package gui;
+package view;
 
+import log.Logger;
 import model.RobotModel;
 
 import java.awt.*;

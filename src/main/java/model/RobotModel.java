@@ -1,5 +1,7 @@
 package model;
 
+import log.Logger;
+
 import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -51,6 +53,7 @@ public class RobotModel {
         moveRobot(velocity, angularVelocity, 10);
 
         support.firePropertyChange("position", null, new Point((int) x, (int) y));
+
     }
     /**
      * Перемещает робота на основе скорости и угловой скорости.

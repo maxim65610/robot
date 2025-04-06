@@ -5,6 +5,7 @@ import controller.MouseController;
 import log.Logger;
 import model.RobotModel;
 import view.GameVisualizer;
+import view.RobotCoordinatesWindow;
 
 import javax.swing.*;
 import java.awt.*;
