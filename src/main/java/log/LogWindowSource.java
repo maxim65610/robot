@@ -9,7 +9,6 @@ import java.util.WeakHashMap;
  * зарегистрированных слушателей о новых сообщениях.
  */
 public class LogWindowSource {
-    private final int m_iQueueLength;
     private final CircularBuffer<LogEntry> m_messages;
     private final Set<LogChangeListener> m_listeners;
     private volatile LogChangeListener[] m_activeListeners;
@@ -17,7 +16,6 @@ public class LogWindowSource {
      * Создает новый источник лога с указанной емкостью.
      */
     public LogWindowSource(int iQueueLength) {
-        m_iQueueLength = iQueueLength;
         m_messages = new CircularBuffer<>(iQueueLength);
         m_listeners = Collections.newSetFromMap(new WeakHashMap<>());
     }
@@ -55,7 +53,7 @@ public class LogWindowSource {
                 }
             }
         }
-        for (LogChangeListener listener : activeListeners) {
+        for (LogChangeListener listener : m_activeListeners) {
             listener.onLogChanged();
         }
     }
