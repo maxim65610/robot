@@ -10,7 +10,7 @@ public final class Logger
      */
     private static final LogWindowSource defaultLogSource;
     static {
-        defaultLogSource = new LogWindowSource(15);
+        defaultLogSource = new LogWindowSource(5);
     }
     /**
      * Приватный конструктор предотвращает создание экземпляров этого класса,
