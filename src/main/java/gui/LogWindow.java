@@ -7,6 +7,8 @@ import java.awt.TextArea;
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 
+import localization.LocaleChangeListener;
+import localization.LocaleManager;
 import log.LogChangeListener;
 import log.LogEntry;
 import log.LogWindowSource;
@@ -15,7 +17,7 @@ import log.LogWindowSource;
  * Класс реализует интерфейс LogChangeListener для автоматического обновления
  * содержимого журнала при изменении данных.
  */
-public class LogWindow extends JInternalFrame implements LogChangeListener
+public class LogWindow extends JInternalFrame implements LogChangeListener, LocaleChangeListener
 {
     private LogWindowSource m_logSource;
     private TextArea m_logContent;
@@ -27,7 +29,8 @@ public class LogWindow extends JInternalFrame implements LogChangeListener
      */
     public LogWindow(LogWindowSource logSource) 
     {
-        super("Протокол работы", true, true, true, true);
+        super(LocaleManager.getInstance().getString("logWindowTitle")
+                , true, true, true, true);
         m_logSource = logSource;
         m_logSource.registerListener(this);
         m_logContent = new TextArea("");
@@ -36,8 +39,16 @@ public class LogWindow extends JInternalFrame implements LogChangeListener
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_logContent, BorderLayout.CENTER);
         getContentPane().add(panel);
+        LocaleManager.getInstance().addListener(this);
         pack();
         updateLogContent();
+    }
+    /**
+     * Вызывается при смене локали.
+     */
+    @Override
+    public void onLocaleChanged() {
+        setTitle(LocaleManager.getInstance().getString("logWindowTitle"));
     }
     /**
      * Обновляет содержимое текстового поля журнала, собирая все записи из источника лога.

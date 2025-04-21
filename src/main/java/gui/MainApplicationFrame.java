@@ -2,6 +2,8 @@ package gui;
 
 import controller.GameController;
 import controller.MouseController;
+import localization.LocaleChangeListener;
+import localization.LocaleManager;
 import log.Logger;
 import model.RobotModel;
 import view.GameVisualizer;
@@ -18,17 +20,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 /**
- * Основной фрейм приложения, который управляет окнами, состоянием и интерфейсом пользователя.
+ * Представляет главное окно приложения.
+ * Оно управляет внутренними окнами, пользовательским интерфейсом
+ * (меню, визуализаторы, лог), а также сохраняет и восстанавливает состояние между запусками.
+ * Кроме того, данный класс реализует интерфейс LocaleChangeListener и поддерживает
+ * локализацию пользовательского интерфейса, включая меню и сообщения.
  */
-public class MainApplicationFrame extends JFrame {
+public class MainApplicationFrame extends JFrame implements LocaleChangeListener {
     private final JDesktopPane desktopPane = new JDesktopPane();
     private final WindowConfig windowConfig;
     private final List<WindowState> windowStates = new ArrayList<>();
+    private JMenu lookAndFeelMenu;
+    private JMenu testMenu;
+    private JMenu languageMenu;
+    private JMenu managementMenu;
+    private JMenuItem exitItem;
+    private JMenuItem systemLookAndFeelItem;
+    private JMenuItem crossPlatformLookAndFeelItem;
+    private JMenuItem addLogMessageItem;
+    private JMenuItem russianItem;
+    private JMenuItem englishItem;
     /**
-     * Конструктор, инициализирующий основные компоненты фрейма, включая создание внутренних окон и
-     * восстановление их состояния из конфигурационного файла.
+     * Конструктор, инициализирующий главное окно:
+     * Создает и отображает визуализатор и координаты робота.
+     * Создает контроллеры управления.
+     * Устанавливает меню и поддержку локализации.
      */
     public MainApplicationFrame() {
+        LocaleManager.getInstance().addListener(this);
         RobotModel model = new RobotModel();
         GameVisualizer view = new GameVisualizer(model);
         new GameController(model);
@@ -61,7 +80,6 @@ public class MainApplicationFrame extends JFrame {
         windowStates.add(new MainFrameStateAdapter(this, "main"));
 
         restoreStateFromConfig();
-
         setJMenuBar(createMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
@@ -73,6 +91,49 @@ public class MainApplicationFrame extends JFrame {
         });
     }
     /**
+     * Метод, вызываемый при смене языка интерфейса.
+     * Обновляет текст всех пунктов меню в соответствии с новой локалью.
+     */
+    @Override
+    public void onLocaleChanged() {
+        updateMenuTexts();
+    }
+    /**
+     * Обновляет надписи всех пунктов меню с учетом текущей локали.
+     * Вызывается как при инициализации, так и при смене языка.
+     */
+    private void updateMenuTexts() {
+        LocaleManager locale = LocaleManager.getInstance();
+        lookAndFeelMenu.setText(locale.getString("menu.view"));
+        exitItem.setText(locale.getString("menu.exit"));
+        testMenu.setText(locale.getString("menu.tests"));
+        languageMenu.setText(locale.getString("menu.language"));
+        managementMenu.setText(locale.getString("menu.management"));
+        systemLookAndFeelItem.setText(locale.getString("menu.view.system"));
+        crossPlatformLookAndFeelItem.setText(locale.getString("menu.view.cross"));
+        addLogMessageItem.setText(locale.getString("menu.tests.logMessage"));
+        russianItem.setText(locale.getString("menu.language.ru"));
+        englishItem.setText(locale.getString("menu.language.en"));
+    }
+    /**
+     * Создает меню выбора языка с двумя пунктами — Русский и Английский.
+     * Меняет локаль в LocaleManager при выборе соответствующего пункта
+     */
+    private JMenu createLanguageMenu() {
+        languageMenu = new JMenu(LocaleManager.getInstance().getString("menu.language"));
+        russianItem = new JMenuItem(LocaleManager.getInstance().getString("menu.language.ru"));
+        englishItem = new JMenuItem(LocaleManager.getInstance().getString("menu.language.en"));
+
+        russianItem.addActionListener(e ->
+                LocaleManager.getInstance().setLocale("ru"));
+        englishItem.addActionListener(e ->
+                LocaleManager.getInstance().setLocale("en"));
+
+        languageMenu.add(russianItem);
+        languageMenu.add(englishItem);
+        return languageMenu;
+    }
+    /**
      * Создает и настраивает окно журнала (LogWindow).
      */
     protected LogWindow createLogWindow()
@@ -82,7 +143,6 @@ public class MainApplicationFrame extends JFrame {
         logWindow.setSize(300, 800);
         setMinimumSize(logWindow.getSize());
         logWindow.pack();
-        Logger.debug("Протокол работает");
         return logWindow;
     }
     /**
@@ -94,20 +154,27 @@ public class MainApplicationFrame extends JFrame {
         frame.setVisible(true);
     }
     /**
-     * Создает и настраивает менюбар с двумя меню: "Режим отображения" и "Тесты".
+     * Создает строку меню с подменю:
+     * Режим отображения
+     * Тесты
+     * Управление
+     * Язык
+     * и настраивает их тексты с учетом текущей локали.
      */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(createLookAndFeelMenu());
         menuBar.add(createTestMenu());
         menuBar.add(createManagementMenu());
+        menuBar.add(createLanguageMenu());
+        updateMenuTexts();
         return menuBar;
     }
     /**
-     * Создает пункт меню "Выход" с горячей клавишей Alt + X.
+     * Создает пункт меню "Выход"
      */
     private JMenuItem createExitMenu(){
-        JMenuItem exitItem = new JMenuItem("Выход", KeyEvent.VK_X);
+        exitItem = new JMenuItem();
         exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ActionEvent.ALT_MASK));
         exitItem.addActionListener(event -> {
             Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
@@ -120,7 +187,7 @@ public class MainApplicationFrame extends JFrame {
      * Создает меню "Управление" с пунктом для выхода.
      */
     private JMenuItem createManagementMenu(){
-        JMenu managementMenu = new JMenu("Управление");
+        managementMenu = new JMenu();
         managementMenu.add(createExitMenu());
         return managementMenu;
     }
@@ -128,9 +195,8 @@ public class MainApplicationFrame extends JFrame {
      * Создает меню "Режим отображения" с пунктами для выбора внешнего вида приложения.
      */
     private JMenu createLookAndFeelMenu() {
-        JMenu lookAndFeelMenu = new JMenu("Режим отображения");
+        lookAndFeelMenu = new JMenu();
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
-        lookAndFeelMenu.getAccessibleContext().setAccessibleDescription("Управление режимом отображения приложения");
 
         lookAndFeelMenu.add(createSystemLookAndFeelItem());
         lookAndFeelMenu.add(createCrossPlatformLookAndFeelItem());
@@ -141,35 +207,34 @@ public class MainApplicationFrame extends JFrame {
      * Создает пункт меню "Универсальная схема" для выбора универсального внешнего вида.
      */
     private JMenuItem createCrossPlatformLookAndFeelItem() {
-        JMenuItem crossPlatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
-        crossPlatformLookAndFeel.addActionListener(event -> {
+        crossPlatformLookAndFeelItem = new JMenuItem();
+        crossPlatformLookAndFeelItem.addActionListener(event -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
                 SwingUtilities.updateComponentTreeUI(this);
             } catch (Exception ignored) {}
         });
-        return crossPlatformLookAndFeel;
+        return crossPlatformLookAndFeelItem;
     }
     /**
      * Создает пункт меню для выбора системной схемы внешнего вида.
      */
     private JMenuItem createSystemLookAndFeelItem() {
-        JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
-        systemLookAndFeel.addActionListener(event -> {
+        systemLookAndFeelItem = new JMenuItem();
+        systemLookAndFeelItem.addActionListener(event -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 SwingUtilities.updateComponentTreeUI(this);
             } catch (Exception ignored) {}
         });
-        return systemLookAndFeel;
+        return systemLookAndFeelItem;
     }
     /**
      * Создает меню "Тесты" с пунктами для выполнения тестовых команд.
      */
     private JMenu createTestMenu() {
-        JMenu testMenu = new JMenu("Тесты");
+        testMenu = new JMenu();
         testMenu.setMnemonic(KeyEvent.VK_T);
-        testMenu.getAccessibleContext().setAccessibleDescription("Тестовые команды");
 
         testMenu.add(createAddLogMessageItem());
 
@@ -179,8 +244,9 @@ public class MainApplicationFrame extends JFrame {
      * Создает пункт меню "Сообщение в лог" для добавления записи в журнал.
      */
     private JMenuItem createAddLogMessageItem() {
-        JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
-        addLogMessageItem.addActionListener(event -> Logger.debug("Новая строка"));
+        addLogMessageItem = new JMenuItem();
+        addLogMessageItem.addActionListener(event -> Logger.debug
+                (LocaleManager.getInstance().getString("log.test")));
         return addLogMessageItem;
     }
     /**
@@ -210,11 +276,13 @@ public class MainApplicationFrame extends JFrame {
      * Подтверждает выход из приложения и сохраняет состояние перед выходом.
      */
     private void confirmExitAndSaveState() {
-        String[] options = {"Да", "Нет"};
+        LocaleManager localeManager = LocaleManager.getInstance();
+        String[] options = {localeManager.getString("confirmation.yes"),
+                localeManager.getString("confirmation.no")};
         int result = JOptionPane.showOptionDialog(
                 this,
-                "Вы действительно хотите выйти?",
-                "Подтверждение выхода",
+                localeManager.getString("exitConfirmation"),
+                localeManager.getString("exitTitle"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -224,6 +292,7 @@ public class MainApplicationFrame extends JFrame {
         );
 
         if (result == JOptionPane.YES_OPTION) {
+            localeManager.saveLanguage();
             saveStateToConfig();
             dispose();
             System.exit(0);

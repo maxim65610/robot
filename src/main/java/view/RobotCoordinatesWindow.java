@@ -1,5 +1,7 @@
 package view;
 
+import localization.LocaleChangeListener;
+import localization.LocaleManager;
 import log.Logger;
 import model.RobotModel;
 
@@ -13,24 +15,31 @@ import javax.swing.JPanel;
 /**
  * Внутреннее окно для отображения текущих координат робота.
  */
-public class RobotCoordinatesWindow extends JInternalFrame implements PropertyChangeListener {
+public class RobotCoordinatesWindow extends JInternalFrame implements PropertyChangeListener, LocaleChangeListener {
     private final JLabel coordinatesLabel;
-
     /**
      * Создает внутреннее окно для отображения координат робота.
      *
      * @param model Модель робота.
      */
     public RobotCoordinatesWindow(RobotModel model) {
-        super("Координаты робота", true, true, true, true);
+        super(LocaleManager.getInstance().getString("coordinatesWindowTitle"),
+                true, true, true, true);
         setSize(250,  100);
         JPanel panel = new JPanel();
         coordinatesLabel = new JLabel();
         panel.add(coordinatesLabel);
         add(panel, BorderLayout.CENTER);
-
+        LocaleManager.getInstance().addListener(this);
         model.addPropertyChangeListener(this);
         updateCoordinates(model.getX(), model.getY());
+    }
+    /**
+     * Вызывается при смене локали.
+     */
+    @Override
+    public void onLocaleChanged() {
+        setTitle(LocaleManager.getInstance().getString("coordinatesWindowTitle"));
     }
 
     /**
@@ -40,7 +49,7 @@ public class RobotCoordinatesWindow extends JInternalFrame implements PropertyCh
      * @param y Координата Y.
      */
     private void updateCoordinates(double x, double y) {
-        coordinatesLabel.setText(String.format("Координаты: x = %.2f  y = %.2f", x, y));
+        coordinatesLabel.setText(String.format("x = %.2f  y = %.2f", x, y));
     }
 
     /**
