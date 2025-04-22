@@ -112,8 +112,6 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
         systemLookAndFeelItem.setText(locale.getString("menu.view.system"));
         crossPlatformLookAndFeelItem.setText(locale.getString("menu.view.cross"));
         addLogMessageItem.setText(locale.getString("menu.tests.logMessage"));
-        russianItem.setText(locale.getString("menu.language.ru"));
-        englishItem.setText(locale.getString("menu.language.en"));
     }
     /**
      * Создает меню выбора языка с двумя пунктами — Русский и Английский.
@@ -121,8 +119,8 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
      */
     private JMenu createLanguageMenu() {
         languageMenu = new JMenu(LocaleManager.getInstance().getString("menu.language"));
-        russianItem = new JMenuItem(LocaleManager.getInstance().getString("menu.language.ru"));
-        englishItem = new JMenuItem(LocaleManager.getInstance().getString("menu.language.en"));
+        russianItem = new JMenuItem("Русский");
+        englishItem = new JMenuItem("English");
 
         russianItem.addActionListener(e ->
                 LocaleManager.getInstance().setLocale("ru"));
