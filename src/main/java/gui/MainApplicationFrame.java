@@ -5,16 +5,24 @@ import controller.MouseController;
 import localization.LocaleChangeListener;
 import localization.LocaleManager;
 import log.Logger;
+import model.DefaultGameModel;
+import model.GameModel;
 import model.RobotModel;
+import view.DefaultRobotVisualizer;
 import view.GameVisualizer;
 import view.RobotCoordinatesWindow;
+import view.RobotVisualizer;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,16 +38,21 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
     private final JDesktopPane desktopPane = new JDesktopPane();
     private final WindowConfig windowConfig;
     private final List<WindowState> windowStates = new ArrayList<>();
+    private RobotModel model = new RobotModel(new DefaultGameModel());
+    private final GameVisualizer view = new GameVisualizer(model, new DefaultRobotVisualizer());
     private JMenu lookAndFeelMenu;
     private JMenu testMenu;
     private JMenu languageMenu;
     private JMenu managementMenu;
+    private JMenu pluginsMenu;
     private JMenuItem exitItem;
     private JMenuItem systemLookAndFeelItem;
     private JMenuItem crossPlatformLookAndFeelItem;
     private JMenuItem addLogMessageItem;
     private JMenuItem russianItem;
     private JMenuItem englishItem;
+    private JMenuItem loadRobotItem;
+    private JMenuItem defaultSettingsItem;
     /**
      * Конструктор, инициализирующий главное окно:
      * Создает и отображает визуализатор и координаты робота.
@@ -48,8 +61,6 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
      */
     public MainApplicationFrame() {
         LocaleManager.getInstance().addListener(this);
-        RobotModel model = new RobotModel();
-        GameVisualizer view = new GameVisualizer(model);
         new GameController(model);
         new MouseController(model, view);
 
@@ -112,6 +123,9 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
         systemLookAndFeelItem.setText(locale.getString("menu.view.system"));
         crossPlatformLookAndFeelItem.setText(locale.getString("menu.view.cross"));
         addLogMessageItem.setText(locale.getString("menu.tests.logMessage"));
+        pluginsMenu.setText(locale.getString("menu.plugins"));
+        loadRobotItem.setText(locale.getString("menu.loadRobot"));
+        defaultSettingsItem.setText(locale.getString("menu.default"));
     }
     /**
      * Создает меню выбора языка с двумя пунктами — Русский и Английский.
@@ -165,6 +179,7 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
         menuBar.add(createTestMenu());
         menuBar.add(createManagementMenu());
         menuBar.add(createLanguageMenu());
+        menuBar.add(createPluginsMenu());
         updateMenuTexts();
         return menuBar;
     }
@@ -246,6 +261,68 @@ public class MainApplicationFrame extends JFrame implements LocaleChangeListener
         addLogMessageItem.addActionListener(event -> Logger.debug
                 (LocaleManager.getInstance().getString("log.test")));
         return addLogMessageItem;
+    }
+    /**
+     * Создает меню "Плагины" для загрузки расширений и установки дефолтных настроек.
+     */
+    private JMenu createPluginsMenu() {
+        pluginsMenu = new JMenu();
+        loadRobotItem = new JMenuItem();
+        defaultSettingsItem = new JMenuItem();
+        loadRobotItem.addActionListener(e -> loadRobotPlugin());
+        defaultSettingsItem.addActionListener(e -> setDefaultSetting());
+        pluginsMenu.add(loadRobotItem);
+        pluginsMenu.add(defaultSettingsItem);
+        return pluginsMenu;
+    }
+    private void setDefaultSetting(){
+        view.setVisualizer(new DefaultRobotVisualizer());
+        model.setModel(new DefaultGameModel());
+    }
+    /**
+     * Открывает диалоговое окно выбора JAR-файла с плагином робота.
+     * После выбора файла делегирует загрузку методу loadRobotFromJar(File).
+     */
+    private void loadRobotPlugin() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("JAR Files", "jar"));
+
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File jarFile = fileChooser.getSelectedFile();
+            loadRobotFromJar(jarFile);
+        }
+    }
+    /**
+     * Загружает и инициализирует плагин робота из указанного JAR-файла
+     */
+    private void loadRobotFromJar(File jarFile) {
+        try {
+            URL jarUrl = jarFile.toURI().toURL();
+            URLClassLoader classLoader = new URLClassLoader(
+                    new URL[]{jarUrl},
+                    getClass().getClassLoader()
+            );
+
+            Class<?> visualizerClass = classLoader.loadClass("view.CustomRobotVisualizer");
+            RobotVisualizer visualizer = (RobotVisualizer)visualizerClass.getDeclaredConstructor().newInstance();
+
+            view.setVisualizer(visualizer);
+
+            Class<?> modelClass = classLoader.loadClass("model.CustomRobotModel");
+            GameModel modelC = (GameModel)modelClass.getDeclaredConstructor().newInstance();
+
+            model.setModel(modelC);
+            Logger.debug(LocaleManager.getInstance().getString("robot.load.successfully"));
+            JOptionPane.showMessageDialog(this,
+                    LocaleManager.getInstance().getString("robot.load.successfully"),
+                    LocaleManager.getInstance().getString("success"), JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception ex) {
+            Logger.error(LocaleManager.getInstance().getString("robot.load.failed") + " " +ex.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    LocaleManager.getInstance().getString("robot.load.error") + " " + ex.getMessage(),
+                    LocaleManager.getInstance().getString("error"), JOptionPane.ERROR_MESSAGE);
+        }
     }
     /**
      * Сохраняет состояние всех окон в конфигурационный файл.

@@ -1,6 +1,5 @@
 package model;
-
-import log.Logger;
+import view.RobotVisualizer;
 
 import java.awt.*;
 import java.beans.PropertyChangeListener;
@@ -9,14 +8,15 @@ import java.beans.PropertyChangeSupport;
  * Класс RobotModel представляет модель робота, управляющую его позицией и направлением.
  * Модель уведомляет слушателей об изменениях через PropertyChangeSupport.
  */
-public class RobotModel {
-    private volatile double x = 100;
-    private volatile double y = 100;
+public class RobotModel{
+    private volatile double x;
+    private volatile double y;
     private volatile double direction = 0;
     private volatile int targetX = 150;
     private volatile int targetY = 100;
-    private static final double maxVelocity = 0.1;
-    private static final double maxAngularVelocity = 0.001;
+    private static double maxVelocity;
+    private static double maxAngularVelocity;
+    private GameModel model;
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
     /**
      * Добавляет слушателя изменений.
@@ -25,6 +25,20 @@ public class RobotModel {
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
+    }
+    public RobotModel(GameModel model){
+        setModel(model);
+    }
+    public void setModel(GameModel model) {
+        this.model = model;
+        setField();
+    }
+    public void setField(){
+        x = model.getX();
+        y = model.getY();
+        maxVelocity = model.getMaxVelocity();
+        maxAngularVelocity = model.getMaxAngularVelocity();
+        direction = model.getDirection();
     }
     /**
      * Устанавливает новую цель для робота.
@@ -50,50 +64,10 @@ public class RobotModel {
         double angleDifference = asNormalizedRadians(angleToTarget - direction);
         double angularVelocity = (angleDifference <= Math.PI) ? maxAngularVelocity : -maxAngularVelocity;
 
-        moveRobot(velocity, angularVelocity, 10);
-
+        model.moveRobot(velocity, angularVelocity, 10);
+        setField();
         support.firePropertyChange("position", null, new Point((int) x, (int) y));
 
-    }
-    /**
-     * Перемещает робота на основе скорости и угловой скорости.
-     *
-     * @param velocity        Скорость робота.
-     * @param angularVelocity Угловая скорость робота.
-     * @param duration        Время перемещения.
-     */
-    private void moveRobot(double velocity, double angularVelocity, double duration) {
-        velocity = applyLimits(velocity, 0, maxVelocity);
-        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
-        double newX = x + velocity / angularVelocity *
-                (Math.sin(direction  + angularVelocity * duration) -
-                        Math.sin(direction));
-        if (!Double.isFinite(newX))
-        {
-            newX = x + velocity * duration * Math.cos(direction);
-        }
-        double newY = y - velocity / angularVelocity *
-                (Math.cos(direction  + angularVelocity * duration) -
-                        Math.cos(direction));
-        if (!Double.isFinite(newY))
-        {
-            newY = y + velocity * duration * Math.sin(direction);
-        }
-        x = newX;
-        y = newY;
-        double newDirection = asNormalizedRadians(direction + angularVelocity * duration);
-        direction = newDirection;
-    }
-    /**
-     * Ограничивает значение в заданных пределах.
-     */
-    private static double applyLimits(double value, double min, double max)
-    {
-        if (value < min)
-            return min;
-        if (value > max)
-            return max;
-        return value;
     }
     /**
      * Вычисляет расстояние между двумя точками.
